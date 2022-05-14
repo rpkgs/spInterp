@@ -40,12 +40,13 @@ spInterp <- function(points, dat, range, res = 1,
   ntime = ncol(dat)
   names = colnames(dat) %||% 1:ntime
   
-  pred = lapply(set_names(1:ntime, names), function(i) {
-    d = cbind(I = 1:nrow(dat), x = dat[, i])
+  pred <- aaply(dat, 2, function(i) {
+    d = cbind(I = 1:nrow(dat), x = i)
     merge(weight[, .(lon, lat, I, w)], d, by = "I", sort = FALSE) %>% 
       .[, .(value = weighted.mean(x, w, na.rm = TRUE)), .(lon, lat)] %>% 
       { merge(grid, ., all.x = TRUE)$value }
-  }) %>% do.call(cbind, .)
+  }, .parallel = T)
+  
   list(weight = weight, coord = grid, predicted = pred)
 }
 
